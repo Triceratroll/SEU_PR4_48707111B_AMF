@@ -61,7 +61,6 @@ UART_HandleTypeDef huart2;
 	unsigned int prev_contador = 0;
 	int ledState = 0;
 
-
 	unsigned int contador_alarma = 0;
 	unsigned int prevContador_alarma = 0;
 
@@ -235,22 +234,21 @@ void setAlarm(int porcentaje) {
 
 void fireAlarm(int alarma_state) {
 
-	int estado_b2 = (int)HAL_GPIO_ReadPin(PULSADOR2_GPIO_Port, PULSADOR2_Pin);
+	// Primera vez
+	if (alarma_state == 1 && cooldown == 0) { HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1); }
 
-	if (estado_b2 == 0) {
+	// Resto de veces
+	if (contador_alarma - prevContador_alarma >= 100000 && alarma_state == 1) {
+
+		prevContador_alarma = contador_alarma;
+		HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1);
+		cooldown = 0;
+	}
+
+	if (HAL_GPIO_ReadPin(PULSADOR2_GPIO_Port, PULSADOR2_Pin) == 0) {
 		HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 0);
 		alarma_state = 0;
 		cooldown = 1;
-	}
-
-	if (alarma_state == 1 && cooldown == 0) {
-		HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1);
-	}
-
-	if (contador_alarma - prevContador_alarma >= 100000 && alarma_state == 1) {
-
-			prevContador_alarma = contador_alarma;
-			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1);
 	}
 
 	if (cooldown == 1) { contador_alarma++; }
@@ -310,15 +308,21 @@ int main(void)
 
 		  setLeds(porcentaje_luz);
 
-		  if (nivel_alarma < porcentaje_luz) { alarma_state = 1; }
-		  else 								 { alarma_state = 0; }
+		  if (porcentaje_luz > nivel_alarma ) {
+			  alarma_state = 1;
+		  } else {
+			  alarma_state = 0;
+		  }
 
 	  } else if (pulsador%2 == 1) {
 
 		  setLeds(porcentaje_temp);
 
-		  if (nivel_alarma < porcentaje_temp) { alarma_state = 1; }
-	  else 									  { alarma_state = 0; }
+		  if (porcentaje_temp > nivel_alarma ) {
+			  alarma_state = 1;
+		  } else {
+			  alarma_state = 0;
+		  }
 	  }
 
 	  setAlarm(nivel_alarma);
