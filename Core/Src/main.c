@@ -105,8 +105,9 @@ int readLUZ(void) {
 	HAL_ADC_PollForConversion(&hadc1, 1000);
 	int luz = (int)HAL_ADC_GetValue(&hadc1);
 	luz = (luz * -1) + 4095; // invertimos el valor del sensor
+	luz = luz - 2048;
 	HAL_ADC_Stop(&hadc1);
-	return (int) ((luz*100)/4096);
+	return (int) ((luz*100)/2048);
 }
 
 int readTEMP(void) {
@@ -123,7 +124,7 @@ int readTEMP(void) {
 	float TNTC = BETA/(log((-10000.0*3.3/(valueAD*3.3/4095.9-3.3)-10000.0)/R25)+BETA/TK25)-273.18;
 	float temp = TNTC - TC25;
 	HAL_ADC_Stop(&hadc1);
-	return (int) ((temp*100)/6);
+	return (int) ((temp*100)/15);
 }
 
 void setLeds(int porcentaje) {
